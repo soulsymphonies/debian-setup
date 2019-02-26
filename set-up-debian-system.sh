@@ -64,19 +64,27 @@ ${SUDO} apt-get install -y postfix
 # setting up bash profile #
 ###########################
 
-# activating aliases
-echo "activating aliases in .bashrc"
-sed -i 's/# alias ls=\x27ls $LS_OPTIONS\x27/alias ls=\x27ls $LS_OPTIONS\x27/' ~/.bashrc
-sed -i 's/# alias ll=\x27ls $LS_OPTIONS -l\x27/alias ll=\x27ls $LS_OPTIONS -l\x27/' ~/.bashrc
-sed -i 's/# alias l=\x27ls $LS_OPTIONS -lA\x27/alias l=\x27ls $LS_OPTIONS -lA\x27/' ~/.bashrc
 
-sed -i 's/# alias rm=\x27rm -i\x27/alias rm=\x27rm -i\x27/' ~/.bashrc
-sed -i 's/# alias cp=\x27cp -i\x27/alias cp=\x27cp -i\x27/' ~/.bashrc
-sed -i 's/# alias mv=\x27mv -i\x27/alias mv=\x27mv -i\x27/' ~/.bashrc
+if [ -f ~/.bashrc ]; then
+	# activating aliases
+	echo "activating aliases in .bashrc"
+	sed -i 's/# alias ls=\x27ls $LS_OPTIONS\x27/alias ls=\x27ls $LS_OPTIONS\x27/' ~/.bashrc
+	sed -i 's/# alias ll=\x27ls $LS_OPTIONS -l\x27/alias ll=\x27ls $LS_OPTIONS -l\x27/' ~/.bashrc
+	sed -i 's/# alias l=\x27ls $LS_OPTIONS -lA\x27/alias l=\x27ls $LS_OPTIONS -lA\x27/' ~/.bashrc
+	sed -i 's/# alias rm=\x27rm -i\x27/alias rm=\x27rm -i\x27/' ~/.bashrc
+	sed -i 's/# alias cp=\x27cp -i\x27/alias cp=\x27cp -i\x27/' ~/.bashrc
+	sed -i 's/# alias mv=\x27mv -i\x27/alias mv=\x27mv -i\x27/' ~/.bashrc
+	bashrc=$(cat ~/.bashrc)
+else 
+	touch ~/.bashrc
+	bashrc=
+fi
 
-# appending history settings
-echo "appending history settings to .bashrc"
-cat files/bash/bash-history-settings.txt >> ~/.bashrc
+# appending history settings if not present
+if [[ "$bashrc" != *history-settings* ]]; then
+	echo "appending history settings to .bashrc"
+    cat files/bash/bash-history-settings.txt >> ~/.bashrc
+fi
 
 ########################################################
 # setting up iptables-persistent and ipset-persistent  #
@@ -145,14 +153,21 @@ ${SUDO} psad --sig-update
 # show psad status
 ${SUDO} psad -S
 
+# copy signature update script
+${SUDO} \cp -f files/scripts/psad-sig-update.sh /usr/local/bin/psad-sig-update.sh
+
 echo "setting up cronjob for psad signature update"
-if [ ! -f /var/spool/cron/crontabs/root ]; then
+if [ -f /var/spool/cron/crontabs/root ]; then
+	cronjobs=$(cat /var/spool/cron/crontabs/root)
+else
 	${SUDO} touch /var/spool/cron/crontabs/root
+	cronjob=
 fi
 
-(${SUDO} crontab -u root -l; ${SUDO} echo "# update psad signatures") | ${SUDO} crontab -u root -
-(${SUDO} crontab -u root -l; ${SUDO} echo "0 5 * * * /usr/local/bin/psad-sig-update.sh > /dev/null 2&>1") | ${SUDO} crontab -u root -
-
+if [[ "$cronjobs" != *psad-sig-update.sh* ]]; then
+	(${SUDO} crontab -u root -l; ${SUDO} echo "# update psad signatures") | ${SUDO} crontab -u root -
+	(${SUDO} crontab -u root -l; ${SUDO} echo "0 5 * * * /usr/local/bin/psad-sig-update.sh > /dev/null 2&>1") | ${SUDO} crontab -u root -
+fi
 
 ##################################
 # setting up iptables rules now  #
@@ -178,7 +193,9 @@ ${SUDO} sed -i "/MAILTO/a CRONDARGS=-s -m off" /etc/crontab
 # setting up aliases for local users  #
 #######################################
 
-${SUDO} mv /etc/aliases /etc/aliases_backup
+if [ -f /etc/aliases ]; then
+	${SUDO} mv /etc/aliases /etc/aliases_backup
+fi
 ${SUDO} \cp -f files/aliases/aliases /etc/aliases
 ${SUDO} sed -i "s/name@your-email-address/$EMAIL/" /etc/aliases
 ${SUDO} newaliases
