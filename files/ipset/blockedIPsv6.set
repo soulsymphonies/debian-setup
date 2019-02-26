@@ -1,0 +1,2 @@
+create blockedIPsv6 hash:ip family inet6 hashsize 1024 maxelem 65536
+add blockedIPsv6 2002:6402:2765::1

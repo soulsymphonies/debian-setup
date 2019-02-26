@@ -1,0 +1,4 @@
+create DockerIPNets hash:net family inet hashsize 1024 maxelem 65536
+add DockerIPNets 172.22.1.0/24
+add DockerIPNets 172.22.2.0/24
+add DockerIPNets 172.22.3.0/24

@@ -1,0 +1,22 @@
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [6:455]
+:PSAD_BLOCK_FORWARD - [0:0] 
+:PSAD_BLOCK_INPUT - [0:0]
+:PSAD_BLOCK_OUTPUT - [0:0]
+-A INPUT -j PSAD_BLOCK_INPUT
+-A INPUT -m set --match-set blockedIPsv6 src -j DROP
+-A INPUT -i lo -j ACCEPT
+-A INPUT ! -i lo -s ::1/128 -j DROP 
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p ipv6-icmp -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 40044 -j ACCEPT
+-A INPUT -j LOG
+-A FORWARD -j PSAD_BLOCK_FORWARD
+-A FORWARD -s ::1/128 -j DROP
+-A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A FORWARD -j LOG
+-A OUTPUT -j PSAD_BLOCK_OUTPUT
+-A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+COMMIT
