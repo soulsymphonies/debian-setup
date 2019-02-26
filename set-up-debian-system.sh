@@ -204,9 +204,9 @@ ${SUDO} newaliases
 ${SUDO} cat << EOF > /etc/postfix/generic
 root						$EMAIL
 root@$HOSTNAME				$EMAIL
-root@HOST_FQDN				$EMAIL
-@HOSTNAME					$EMAIL
-@HOST_FQDN					$EMAIL
+root@$HOST_FQDN				$EMAIL
+@$HOSTNAME					$EMAIL
+@$HOST_FQDN					$EMAIL
 EOF
 ${SUDO} postmap /etc/postfix/generic
 
