@@ -14,6 +14,7 @@ fi
 
 ${SUDO} apt-get -y install apt-transport-https curl lsb-release ca-certificates software-properties-common dirmngr
 
+echo "adding repositories"
 # add stretch-backports
 ${SUDO} sh -c 'echo "deb http://ftp.de.debian.org/debian/ stretch-backports main contrib non-free" > /etc/apt/sources.list.d/backports.list'
 
@@ -53,7 +54,8 @@ ${SUDO} apt-get update
 ###########################################
 # install postfix for local mail delivery #
 ###########################################
-${SUDO} debconf-set-selections <<< "postfix postfix/mailname string $HOSTNAME"
+echo "installing postfix as local MDA"
+${SUDO} debconf-set-selections <<< "postfix postfix/mailname string $HOST_FQDN"
 ${SUDO} debconf-set-selections <<< "postfix postfix/main_mailer_type string 'local only'"
 ${SUDO} apt-get install -y postfix
 
@@ -63,6 +65,7 @@ ${SUDO} apt-get install -y postfix
 ###########################
 
 # activating aliases
+echo "activating aliases in .bashrc"
 sed -i 's/# alias ls=\x27ls $LS_OPTIONS\x27/alias ls=\x27ls $LS_OPTIONS\x27/' ~/.bashrc
 sed -i 's/# alias ll=\x27ls $LS_OPTIONS -l\x27/alias ll=\x27ls $LS_OPTIONS -l\x27/' ~/.bashrc
 sed -i 's/# alias l=\x27ls $LS_OPTIONS -lA\x27/alias l=\x27ls $LS_OPTIONS -lA\x27/' ~/.bashrc
@@ -72,18 +75,21 @@ sed -i 's/# alias cp=\x27cp -i\x27/alias cp=\x27cp -i\x27/' ~/.bashrc
 sed -i 's/# alias mv=\x27mv -i\x27/alias mv=\x27mv -i\x27/' ~/.bashrc
 
 # appending history settings
+echo "appending history settings to .bashrc"
 cat files/bash/bash-history-settings.txt >> ~/.bashrc
 
 ########################################################
 # setting up iptables-persistent and ipset-persistent  #
 ########################################################
 
+echo "installing iptables-persistent"
 ${SUDO} apt-get -y install ipset git
 ${SUDO} debconf-set-selections <<< "iptables-persistent iptables-persistent/autosave_v4 boolean true"
 ${SUDO} debconf-set-selections <<< "iptables-persistent iptables-persistent/autosave_v6 boolean true"
 ${SUDO} apt-get -y install iptables-persistent
 
 # cloning ipset-persistent repo from github
+echo "installing ipset-persistent"
 git clone -b debian https://github.com/soulsymphonies/ipset-persistent.git ipset-persistent
 
 if [ ! -d /etc/ipset ]; then
@@ -109,6 +115,7 @@ ${SUDO} service ipset-persistent reload
 ###########################
 # setting up ssh service  #
 ###########################
+echo "setting up ssh groups and service"
 ${SUDO} addgroup sshusers
 # adding root to the sshusers group
 ${SUDO} adduser root sshusers
@@ -123,23 +130,98 @@ ${SUDO} \cp -f files/ssh/sshd_config /etc/ssh/sshd_config
 ##########################
 # install and setup psad #
 ##########################
+echo "setting up psad"
 ${SUDO} apt-get -y install psad
 ${SUDO} mv /etc/psad/auto_dl /etc/psad/auto_dl_backup
-${SUDO} cp files/psad/auto_dl /etc/psad/auto_dl
+${SUDO} \cp -f files/psad/auto_dl /etc/psad/auto_dl
 ${SUDO} mv /etc/psad/psad.conf /etc/psad/psad.conf_backup
-${SUDO} cp files/psad/psad.conf /etc/psad/psad.conf
+${SUDO} \cp -f files/psad/psad.conf /etc/psad/psad.conf
 
 ${SUDO} sed -i "s/name@your-email-address/$EMAIL/" /etc/psad/psad.conf
-${SUDO} sed -i "s/hostname.yourdomain.tld/$HOSTNAME/" /etc/psad/psad.conf
+${SUDO} sed -i "s/hostname.yourdomain.tld/$HOST_FQDN/" /etc/psad/psad.conf
+
+# update psad signatures
+${SUDO} psad --sig-update
+# show psad status
+${SUDO} psad -S
+
+echo "setting up cronjob for psad signature update"
+if [ ! -f /var/spool/cron/crontabs/root ]; then
+	${SUDO} touch /var/spool/cron/crontabs/root
+fi
+
+(${SUDO} crontab -u root -l; ${SUDO} echo "# update psad signatures") | ${SUDO} crontab -u root -
+(${SUDO} crontab -u root -l; ${SUDO} echo "0 5 * * * /usr/local/bin/psad-sig-update.sh > /dev/null 2&>1") | ${SUDO} crontab -u root -
+
 
 ##################################
 # setting up iptables rules now  #
 ##################################
 # copy config
+echo "setting up iptables rules"
 ${SUDO} mv /etc/iptables/rules.v4 /etc/iptables/rules.v4_backup
 ${SUDO} mv /etc/iptables/rules.v6 /etc/iptables/rules.v6_backup
-${SUDO} cp files/iptables/rules.v4 /etc/iptables/rules.v4
-${SUDO} cp files/iptables/rules.v6 /etc/iptables/rules.v6
+${SUDO} \cp -f files/iptables/rules.v4 /etc/iptables/rules.v4
+${SUDO} \cp -f files/iptables/rules.v6 /etc/iptables/rules.v6
 # reload config
 ${SUDO} iptables-restore < /etc/iptables/rules.v4
 ${SUDO} ip6tables-restore < /etc/iptables/rules.v6
+
+###############################
+# setting cron email settings #
+###############################
+
+${SUDO} sed -i "/PATH/a \\\nMAILTO='$EMAIL'" /etc/crontab
+${SUDO} sed -i "/MAILTO/a CRONDARGS=-s -m off" /etc/crontab
+
+#######################################
+# setting up aliases for local users  #
+#######################################
+
+${SUDO} mv /etc/aliases /etc/aliases_backup
+${SUDO} \cp -f files/aliases/aliases /etc/aliases
+${SUDO} sed -i "s/name@your-email-address/$EMAIL/" /etc/aliases
+${SUDO} newaliases
+
+# generate generic maps to redirect serive and local mail
+${SUDO} cat << EOF > /etc/postfix/generic
+root						$EMAIL
+root@$HOSTNAME				$EMAIL
+root@HOST_FQDN				$EMAIL
+@HOSTNAME					$EMAIL
+@HOST_FQDN					$EMAIL
+EOF
+${SUDO} postmap /etc/postfix/generic
+
+# adjust postfix config to use generic maps
+${SUDO} \cp -f /etc/postfix/main.cf /etc/postfix/main.cf_backup
+${SUDO} sed -i "/inet_protocols/a smtp_generic_maps = hash:/etc/postfix/generic" /etc/postfix/main.cf
+
+#reload postfix service
+${SUDO} postfix reload
+
+#####################################################
+# install and configure automatic software updates  #
+#####################################################
+
+${SUDO} apt-get install -y unattended-upgrades apt-listchanges
+
+# backup and copy new config file
+${SUDO} mv /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/apt.conf.d/50unattended-upgrades_backup
+${SUDO} \cp -f files/apt/50unattended-upgrades /etc/apt/apt.conf.d/50unattended-upgrades
+# setting actual email address
+${SUDO} sed -i "s/name@your-email-address/$EMAIL/" /etc/apt/apt.conf.d/50unattended-upgrades
+
+# activate automatic updates
+${SUDO} dpkg-reconfigure -plow unattended-upgrades
+
+# adjust configuration for auto upgrades and change lists
+if [ -f /etc/apt/apt.conf.d/20auto-upgrades ]; then
+	${SUDO} mv /etc/apt/apt.conf.d/20auto-upgrades /etc/apt/apt.conf.d/20auto-upgrades_backup
+fi
+${SUDO} \cp -f files/apt/20auto-upgrades /etc/apt/apt.conf.d/20auto-upgrades
+
+if [ -f /etc/apt/listchanges.conf ]; then
+	${SUDO} mv /etc/apt/listchanges.confs /etc/apt/listchanges.conf_backup
+fi
+${SUDO} \cp -f /files/apt/listchanges.conf /etc/apt/listchanges.conf
