@@ -230,7 +230,7 @@ ${SUDO} \cp -f files/apt/50unattended-upgrades /etc/apt/apt.conf.d/50unattended-
 ${SUDO} sed -i "s/name@your-email-address/$EMAIL/" /etc/apt/apt.conf.d/50unattended-upgrades
 
 # activate automatic updates
-${SUDO} dpkg-reconfigure -plow unattended-upgrades
+#${SUDO} dpkg-reconfigure -plow unattended-upgrades
 
 # adjust configuration for auto upgrades and change lists
 if [ -f /etc/apt/apt.conf.d/20auto-upgrades ]; then
@@ -239,6 +239,6 @@ fi
 ${SUDO} \cp -f files/apt/20auto-upgrades /etc/apt/apt.conf.d/20auto-upgrades
 
 if [ -f /etc/apt/listchanges.conf ]; then
-	${SUDO} mv /etc/apt/listchanges.confs /etc/apt/listchanges.conf_backup
+	${SUDO} mv /etc/apt/listchanges.conf /etc/apt/listchanges.conf_backup
 fi
-${SUDO} \cp -f /files/apt/listchanges.conf /etc/apt/listchanges.conf
+${SUDO} \cp -f files/apt/listchanges.conf /etc/apt/listchanges.conf
