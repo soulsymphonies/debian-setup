@@ -117,16 +117,16 @@ if [ "$WHOAMI" != "root" ]; then
 fi
 
 # writing sshd configuration
-${SUDO} mv -f /etc/ssh/sshd_config /etc/ssh/sshd_config_backup
+${SUDO} mv /etc/ssh/sshd_config /etc/ssh/sshd_config_backup
 ${SUDO} \cp -f files/ssh/sshd_config /etc/ssh/sshd_config
 
 ##########################
 # install and setup psad #
 ##########################
 ${SUDO} apt-get -y install psad
-${SUDO} mv -f /etc/psad/auto_dl /etc/psad/auto_dl_backup
+${SUDO} mv /etc/psad/auto_dl /etc/psad/auto_dl_backup
 ${SUDO} cp files/psad/auto_dl /etc/psad/auto_dl
-${SUDO} mv -f /etc/psad/psad.conf /etc/psad/psad.conf_backup
+${SUDO} mv /etc/psad/psad.conf /etc/psad/psad.conf_backup
 ${SUDO} cp files/psad/psad.conf /etc/psad/psad.conf
 
 ${SUDO} sed -i "s/name@your-email-address/$EMAIL/" /etc/psad/psad.conf
@@ -136,8 +136,8 @@ ${SUDO} sed -i "s/hostname.yourdomain.tld/$HOSTNAME/" /etc/psad/psad.conf
 # setting up iptables rules now  #
 ##################################
 # copy config
-${SUDO} mv -f /etc/iptables/rules.v4 /etc/iptables/rules.v4_backup
-${SUDO} mv -f /etc/iptables/rules.v6 /etc/iptables/rules.v6_backup
+${SUDO} mv /etc/iptables/rules.v4 /etc/iptables/rules.v4_backup
+${SUDO} mv /etc/iptables/rules.v6 /etc/iptables/rules.v6_backup
 ${SUDO} cp files/iptables/rules.v4 /etc/iptables/rules.v4
 ${SUDO} cp files/iptables/rules.v6 /etc/iptables/rules.v6
 # reload config
