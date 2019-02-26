@@ -6,7 +6,7 @@ source install.conf
 LANG=en_US.UTF-8 locale-gen --purge en_US.UTF-8
 echo -e 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\n' > /etc/default/locale
 
-WHOAMI=$(whomai)
+WHOAMI=$(whoami)
 # adding repositories
 if [ "$WHOAMI" != "root" ]; then
     SUDO=sudo
@@ -53,9 +53,9 @@ ${SUDO} apt-get update
 ###########################################
 # install postfix for local mail delivery #
 ###########################################
-debconf-set-selections <<< "postfix postfix/mailname string $HOSTNAME"
-debconf-set-selections <<< "postfix postfix/main_mailer_type string 'local only'"
-apt-get install -y postfix
+${SUDO} debconf-set-selections <<< "postfix postfix/mailname string $HOSTNAME"
+${SUDO} debconf-set-selections <<< "postfix postfix/main_mailer_type string 'local only'"
+${SUDO} apt-get install -y postfix
 
 
 ###########################
@@ -77,24 +77,31 @@ cat files/bash/bash-history-settings.txt >> ~/.bashrc
 ########################################################
 # setting up iptables-persistent and ipset-persistent  #
 ########################################################
-${SUDO} apt-get -y install iptables-persistent ipset git
 
-cd ~
+${SUDO} apt-get -y install ipset git
+${SUDO} debconf-set-selections <<< "iptables-persistent iptables-persistent/autosave_v4 boolean true"
+${SUDO} debconf-set-selections <<< "iptables-persistent iptables-persistent/autosave_v6 boolean true"
+${SUDO} apt-get -y install iptables-persistent
+
 # cloning ipset-persistent repo from github
-git clone -b debian https://github.com/soulsymphonies/ipset-persistent.git ./
+git clone -b debian https://github.com/soulsymphonies/ipset-persistent.git ipset-persistent
 
 if [ ! -d /etc/ipset ]; then
 	${SUDO} mkdir -p /etc/ipset
 fi
-# copy files
+
+# copy ipset-persistent service files
+cd ipset-persistent
 ${SUDO} cp --parent etc/ipset/README /
 ${SUDO} cp --parent etc/default/ipset-persistent /
 ${SUDO} cp --parent etc/init.d/ipset-persistent /
-# creating autostart
+cd ..
+
+# creating ipset-persistent autostart
 ${SUDO} update-rc.d ipset-persistent defaults
 # starting service
 ${SUDO} systemctl start ipset-persistent.service
-# copy set configurations
+# copy ipset configurations
 ${SUDO} \cp -f files/ipset/*.set /etc/ipset 
 # reload configuration
 ${SUDO} service ipset-persistent reload
