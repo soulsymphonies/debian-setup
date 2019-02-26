@@ -190,9 +190,10 @@ ${SUDO} sed -i "/PATH/a \\\nMAILTO='$EMAIL'" /etc/crontab
 ${SUDO} sed -i "/MAILTO/a CRONDARGS=-s -m off" /etc/crontab
 
 #######################################
-# setting up aliases for local users  #
+# Configure Postfix with Smarthost    #
 #######################################
 
+# create alias maps
 if [ -f /etc/aliases ]; then
 	${SUDO} mv /etc/aliases /etc/aliases_backup
 fi
@@ -200,37 +201,56 @@ ${SUDO} \cp -f files/aliases/aliases /etc/aliases
 ${SUDO} sed -i "s/name@your-email-address/$EMAIL/" /etc/aliases
 ${SUDO} newaliases
 
-# generate generic maps to redirect serive and local mail
+# create a backup of postfix config
+${SUDO} \cp -f /etc/postfix/main.cf /etc/postfix/main.cf_backup
+
+# generate generic maps to rewrite sender address from local users/services
 ${SUDO} cat << EOF > /etc/postfix/generic
-root						$EMAIL
-root@$HOSTNAME				$EMAIL
-root@$HOST_FQDN				$EMAIL
-@$HOSTNAME					$EMAIL
-@$HOST_FQDN					$EMAIL
+root						$EMAIL_FROM
+root@$HOSTNAME				$EMAIL_FROM
+root@$HOST_FQDN				$EMAIL_FROM
+root@localhost				$EMAIL_FROM
+@$HOSTNAME					$EMAIL_FROM
+@$HOST_FQDN					$EMAIL_FROM
+@localhost					$EMAIL_FROM
 EOF
 ${SUDO} postmap /etc/postfix/generic
 
-# adjust postfix config to use generic maps
-${SUDO} \cp -f /etc/postfix/main.cf /etc/postfix/main.cf_backup
-${SUDO} sed -i "/inet_protocols/a smtp_generic_maps = hash:/etc/postfix/generic" /etc/postfix/main.cf
+# generate smtp authentication maps
+if [ ! -f /etc/postfix/smtp_auth ]; then
+${SUDO} cat <<EOF > /etc/postfix/smtp_auth
+$SMTP_RELAY_HOST	$SMTP_RELAY_USERNAME:$SMTP_RELAY_PASSWORD
+EOF
+else
+	${SUDO} echo -e "$SMTP_RELAY_HOST\t$SMTP_RELAY_USERNAME:$SMTP_RELAY_PASSWORD" >> /etc/postfix/smtp_auth
+fi
+${SUDO} postmap /etc/postfix/smtp_auth
 
-#reload postfix service
+# setting generic maps, ssl, mail and smarthost options in postfix main.cf
+${SUDO} sed -i "/smtpd_use_tls/a smtp_use_tls=yes" /etc/postfix/main.cf
+${SUDO} sed -i "/inet_protocols/a smtp_generic_maps = hash:/etc/postfix/generic \nsmtp_sasl_auth_enable = yes \nsmtp_sasl_password_maps = hash:/etc/postfix/smtp_auth" /etc/postfix/main.cf
+${SUDO} sed -i "/smtp_sasl_password_maps/a smtp_sasl_security_options = noanonymous \nsmtp_tls_security_level = encrypt" /etc/postfix/main.cf
+${SUDO} sed -i "s/mydestination =.*/mydestination = localhost/g" /etc/postfix/main.cf
+${SUDO} sed -i "s/inet_interfaces =.*/inet_interfaces = loopback-only/g" /etc/postfix/main.cf
+${SUDO} sed -i "s/default_transport =.*/default_transport = smtp/g" /etc/postfix/main.cf
+${SUDO} sed -i "s/relay_transport =.*/relay_transport = smtp/g" /etc/postfix/main.cf
+${SUDO} sed -i "s/myhostname =.*/myhostname = $HOST_FQDN/g" /etc/postfix/main.cf
+${SUDO} sed -i "s/relayhost =.*/relayhost = [$SMTP_RELAY_HOST]:$SMTP_RELAY_PORT/g" /etc/postfix/main.cf
+
+#reload postfix service to take new settings
 ${SUDO} postfix reload
 
 #####################################################
 # install and configure automatic software updates  #
 #####################################################
-
 ${SUDO} apt-get install -y unattended-upgrades apt-listchanges
 
 # backup and copy new config file
 ${SUDO} mv /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/apt.conf.d/50unattended-upgrades_backup
 ${SUDO} \cp -f files/apt/50unattended-upgrades /etc/apt/apt.conf.d/50unattended-upgrades
+
 # setting actual email address
 ${SUDO} sed -i "s/name@your-email-address/$EMAIL/" /etc/apt/apt.conf.d/50unattended-upgrades
-
-# activate automatic updates
-#${SUDO} dpkg-reconfigure -plow unattended-upgrades
 
 # adjust configuration for auto upgrades and change lists
 if [ -f /etc/apt/apt.conf.d/20auto-upgrades ]; then
