@@ -6,11 +6,12 @@ source install.conf
 LANG=en_US.UTF-8 locale-gen --purge en_US.UTF-8
 echo -e 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\n' > /etc/default/locale
 
+# check if root, else use sudo
 WHOAMI=$(whoami)
-# adding repositories
 if [ "$WHOAMI" != "root" ]; then
     SUDO=sudo
 fi
+# adding repositories
 
 ${SUDO} apt-get -y install apt-transport-https curl lsb-release ca-certificates software-properties-common dirmngr
 
