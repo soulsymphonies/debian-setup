@@ -232,10 +232,29 @@ ${SUDO} sed -i "/inet_protocols/a smtp_generic_maps = hash:/etc/postfix/generic 
 ${SUDO} sed -i "/smtp_sasl_password_maps/a smtp_sasl_security_options = noanonymous \nsmtp_tls_security_level = encrypt" /etc/postfix/main.cf
 ${SUDO} sed -i "s/mydestination =.*/mydestination = localhost/g" /etc/postfix/main.cf
 ${SUDO} sed -i "s/inet_interfaces =.*/inet_interfaces = loopback-only/g" /etc/postfix/main.cf
-${SUDO} sed -i "s/default_transport =.*/default_transport = smtp/g" /etc/postfix/main.cf
-${SUDO} sed -i "s/relay_transport =.*/relay_transport = smtp/g" /etc/postfix/main.cf
 ${SUDO} sed -i "s/myhostname =.*/myhostname = $HOST_FQDN/g" /etc/postfix/main.cf
 ${SUDO} sed -i "s/relayhost =.*/relayhost = [$SMTP_RELAY_HOST]:$SMTP_RELAY_PORT/g" /etc/postfix/main.cf
+
+# store contents of main.cf in variable for checks
+postfix_main_cf=$(cat /etc/postfix/main.cf)
+
+# check if default_transport is present
+if [[ "$postfix_main_cf" != *default_transport* ]]; then
+	# if default_transport is not present, add and set it
+	${SUDO} sed -i "/relayhost/a default_transport = smtp" /etc/postfix/main.cf
+else
+	# if default_transport is present, just set it
+	${SUDO} sed -i "s/default_transport =.*/default_transport = smtp/g" /etc/postfix/main.cf
+fi
+
+# check if relay_transport is present
+if [[ "$postfix_main_cf" != *relay_transport* ]]; then
+	# if relay_transport is not present, add and set it
+	${SUDO} sed -i "/default_transport/a relay_transport = smtp" /etc/postfix/main.cf
+else
+	# if relay_transport is present, just set it
+	${SUDO} sed -i "s/relay_transport =.*/relay_transport = smtp/g" /etc/postfix/main.cf
+fi
 
 #reload postfix service to take new settings
 ${SUDO} postfix reload
