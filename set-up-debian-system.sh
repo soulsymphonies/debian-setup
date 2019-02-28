@@ -13,7 +13,7 @@ if [ "$WHOAMI" != "root" ]; then
 fi
 # adding repositories
 
-${SUDO} apt-get -y install apt-transport-https curl lsb-release ca-certificates software-properties-common dirmngr
+${SUDO} apt-get -qq -y install apt-transport-https curl lsb-release ca-certificates software-properties-common dirmngr
 
 echo "adding repositories"
 # add stretch-backports
@@ -50,7 +50,7 @@ Pin: origin mirror2.hs-esslingen.de
 Pin-Priority: 900
 EOF
 
-${SUDO} apt-get update
+${SUDO} apt-get -qq update
 
 ###########################################
 # install postfix for local mail delivery #
@@ -58,7 +58,7 @@ ${SUDO} apt-get update
 echo "installing postfix as local MDA"
 ${SUDO} debconf-set-selections <<< "postfix postfix/mailname string $HOST_FQDN"
 ${SUDO} debconf-set-selections <<< "postfix postfix/main_mailer_type string 'local only'"
-${SUDO} apt-get install -y postfix
+${SUDO} apt-get -qq install -y postfix
 
 
 ###########################
@@ -94,10 +94,10 @@ fi
 ########################################################
 
 echo "installing iptables-persistent"
-${SUDO} apt-get -y install ipset git
+${SUDO} apt-get -qq -y install ipset git
 ${SUDO} debconf-set-selections <<< "iptables-persistent iptables-persistent/autosave_v4 boolean true"
 ${SUDO} debconf-set-selections <<< "iptables-persistent iptables-persistent/autosave_v6 boolean true"
-${SUDO} apt-get -y install iptables-persistent
+${SUDO} apt-get -qq -y install iptables-persistent
 
 # cloning ipset-persistent repo from github
 echo "installing ipset-persistent"
@@ -232,7 +232,7 @@ ${SUDO} postfix reload
 # install and setup psad #
 ##########################
 echo "setting up psad"
-${SUDO} apt-get -y install psad
+${SUDO} apt-get -qq -y install psad
 ${SUDO} mv /etc/psad/auto_dl /etc/psad/auto_dl_backup
 ${SUDO} \cp -f files/psad/auto_dl /etc/psad/auto_dl
 ${SUDO} mv /etc/psad/psad.conf /etc/psad/psad.conf_backup
@@ -265,7 +265,7 @@ fi
 #####################################################
 # install and configure automatic software updates  #
 #####################################################
-${SUDO} apt-get install -y unattended-upgrades apt-listchanges
+${SUDO} apt-get -qq install -y unattended-upgrades apt-listchanges
 
 # backup and copy new config file
 ${SUDO} mv /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/apt.conf.d/50unattended-upgrades_backup
