@@ -136,40 +136,6 @@ fi
 ${SUDO} mv /etc/ssh/sshd_config /etc/ssh/sshd_config_backup
 ${SUDO} \cp -f files/ssh/sshd_config /etc/ssh/sshd_config
 
-##########################
-# install and setup psad #
-##########################
-echo "setting up psad"
-${SUDO} apt-get -y install psad
-${SUDO} mv /etc/psad/auto_dl /etc/psad/auto_dl_backup
-${SUDO} \cp -f files/psad/auto_dl /etc/psad/auto_dl
-${SUDO} mv /etc/psad/psad.conf /etc/psad/psad.conf_backup
-${SUDO} \cp -f files/psad/psad.conf /etc/psad/psad.conf
-
-${SUDO} sed -i "s/name@your-email-address/$EMAIL/" /etc/psad/psad.conf
-${SUDO} sed -i "s/hostname.yourdomain.tld/$HOST_FQDN/" /etc/psad/psad.conf
-
-# update psad signatures
-${SUDO} psad --sig-update
-# show psad status
-${SUDO} psad -S
-
-# copy signature update script
-${SUDO} \cp -f files/scripts/psad-sig-update.sh /usr/local/bin/psad-sig-update.sh
-
-echo "setting up cronjob for psad signature update"
-if [ -f /var/spool/cron/crontabs/root ]; then
-	cronjobs=$(cat /var/spool/cron/crontabs/root)
-else
-	${SUDO} touch /var/spool/cron/crontabs/root
-	cronjob=
-fi
-
-if [[ "$cronjobs" != *psad-sig-update.sh* ]]; then
-	(${SUDO} crontab -u root -l; ${SUDO} echo "# update psad signatures") | ${SUDO} crontab -u root -
-	(${SUDO} crontab -u root -l; ${SUDO} echo "0 5 * * * /usr/local/bin/psad-sig-update.sh > /dev/null 2&>1") | ${SUDO} crontab -u root -
-fi
-
 ##################################
 # setting up iptables rules now  #
 ##################################
@@ -259,6 +225,41 @@ fi
 
 #reload postfix service to take new settings
 ${SUDO} postfix reload
+
+##########################
+# install and setup psad #
+##########################
+echo "setting up psad"
+${SUDO} apt-get -y install psad
+${SUDO} mv /etc/psad/auto_dl /etc/psad/auto_dl_backup
+${SUDO} \cp -f files/psad/auto_dl /etc/psad/auto_dl
+${SUDO} mv /etc/psad/psad.conf /etc/psad/psad.conf_backup
+${SUDO} \cp -f files/psad/psad.conf /etc/psad/psad.conf
+
+${SUDO} sed -i "s/name@your-email-address/$EMAIL/" /etc/psad/psad.conf
+${SUDO} sed -i "s/hostname.yourdomain.tld/$HOST_FQDN/" /etc/psad/psad.conf
+
+# update psad signatures
+${SUDO} psad --sig-update
+# show psad status
+${SUDO} psad -S
+
+# copy signature update script
+${SUDO} \cp -f files/scripts/psad-sig-update.sh /usr/local/bin/psad-sig-update.sh
+
+echo "setting up cronjob for psad signature update"
+if [ -f /var/spool/cron/crontabs/root ]; then
+	cronjobs=$(cat /var/spool/cron/crontabs/root)
+else
+	${SUDO} touch /var/spool/cron/crontabs/root
+	cronjob=
+fi
+
+if [[ "$cronjobs" != *psad-sig-update.sh* ]]; then
+	(${SUDO} crontab -u root -l; ${SUDO} echo "# update psad signatures") | ${SUDO} crontab -u root -
+	(${SUDO} crontab -u root -l; ${SUDO} echo "0 5 * * * /usr/local/bin/psad-sig-update.sh > /dev/null 2&>1") | ${SUDO} crontab -u root -
+fi
+
 
 #####################################################
 # install and configure automatic software updates  #
