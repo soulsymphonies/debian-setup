@@ -262,7 +262,6 @@ if [[ "$cronjobs" != *psad-sig-update.sh* ]]; then
 	(${SUDO} crontab -u root -l; ${SUDO} echo "0 5 * * * /usr/local/bin/psad-sig-update.sh > /dev/null 2&>1") | ${SUDO} crontab -u root -
 fi
 
-
 #####################################################
 # install and configure automatic software updates  #
 #####################################################
@@ -285,3 +284,6 @@ if [ -f /etc/apt/listchanges.conf ]; then
 	${SUDO} mv /etc/apt/listchanges.conf /etc/apt/listchanges.conf_backup
 fi
 ${SUDO} \cp -f files/apt/listchanges.conf /etc/apt/listchanges.conf
+
+# finally restart ssh daemon
+${SUDO} systemctl restart sshd
