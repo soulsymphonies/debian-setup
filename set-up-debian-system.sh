@@ -69,8 +69,8 @@ ${SUDO} apt-get -qq install -y postfix
 if [ "$WHOAMI" == "root" ]; then
 	# activating aliases and color for root
 	echo "activating aliases in .bashrc"
-	sed -i 's/# eval "`dircolors`"/eval "`dircolors`"/' ~.bashrc
-	sed -i 's/# export LS_OPTIONS\x27--color=auto\x27/export LS_OPTIONS\x27--color=auto\x27' ~.bashrc
+	sed -i 's/# eval "`dircolors`"/eval "`dircolors`"/' ~/.bashrc
+	sed -i 's/# export LS_OPTIONS=\x27--color=auto\x27/export LS_OPTIONS=\x27--color=auto\x27/' ~/.bashrc
 	sed -i 's/# alias ls=\x27ls $LS_OPTIONS\x27/alias ls=\x27ls $LS_OPTIONS\x27/' ~/.bashrc
 	sed -i 's/# alias ll=\x27ls $LS_OPTIONS -l\x27/alias ll=\x27ls $LS_OPTIONS -l\x27/' ~/.bashrc
 	sed -i 's/# alias l=\x27ls $LS_OPTIONS -lA\x27/alias l=\x27ls $LS_OPTIONS -lA\x27/' ~/.bashrc
@@ -226,7 +226,7 @@ else
 fi
 
 #reload postfix service to take new settings
-${SUDO} postfix reload
+${SUDO} systemctl restart postfix
 
 ##########################
 # install and setup psad #
