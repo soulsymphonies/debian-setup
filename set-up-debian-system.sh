@@ -1,6 +1,16 @@
 #!/bin/bash
-# load specific settings
-source install.conf
+
+# import settings, if not present show instructions and exit script
+if [ -f install.conf ]; then
+	source install.conf
+else
+	echo "ERROR: install.conf not found!"
+	echo "Please copy install.conf.template to install.conf first"
+	echo "for example use the following command: cp install.conf.template install.conf"
+	echo "IMPORTANT: adjust install.conf to your environment"
+	echo "exiting script now"
+	exit 1;
+fi
 
 # setting language non-interactively
 LANG=en_US.UTF-8 locale-gen --purge en_US.UTF-8
@@ -195,17 +205,51 @@ else
 fi
 ${SUDO} postmap /etc/postfix/smtp_auth
 
+# store contents of main.cf in variable for checks
+postfix_main_cf=$(cat /etc/postfix/main.cf)
+
 # setting generic maps, ssl, mail and smarthost options in postfix main.cf
-${SUDO} sed -i "/smtpd_use_tls/a smtp_use_tls=yes" /etc/postfix/main.cf
-${SUDO} sed -i "/inet_protocols/a smtp_generic_maps = hash:/etc/postfix/generic \nsmtp_sasl_auth_enable = yes \nsmtp_sasl_password_maps = hash:/etc/postfix/smtp_auth" /etc/postfix/main.cf
-${SUDO} sed -i "/smtp_sasl_password_maps/a smtp_sasl_security_options = noanonymous \nsmtp_tls_security_level = encrypt" /etc/postfix/main.cf
+# checking if values already exist to not duplicate values
+if [[ "$postfix_main_cf" != *smtp_use_tls* ]]; then
+	${SUDO} sed -i "/smtpd_use_tls/a smtp_use_tls=yes" /etc/postfix/main.cf
+else
+	${SUDO} sed -i "s/smtp_use_tls.*/smtp_use_tls=yes/g" /etc/postfix/main.cf
+fi
+
+if [[ "$postfix_main_cf" != *smtp_generic_maps* ]]; then
+	${SUDO} sed -i "/inet_protocols/a smtp_generic_maps = hash:/etc/postfix/generic" /etc/postfix/main.cf
+else
+	${SUDO} sed -i "s/smtp_generic_maps.*/smtp_generic_maps = hash:/etc/postfix/generic/g" /etc/postfix/main.cf
+fi
+
+if [[ "$postfix_main_cf" != *smtp_sasl_auth_enable* ]]; then
+	${SUDO} sed -i "/smtp_generic_maps/a smtp_sasl_auth_enable = yes" /etc/postfix/main.cf
+else
+	${SUDO} sed -i "s/smtp_sasl_auth_enable.*/smtp_sasl_auth_enable = yes/g" /etc/postfix/main.cf
+fi
+
+if [[ "$postfix_main_cf" != *smtp_sasl_password_maps* ]]; then
+	${SUDO} sed -i "/smtp_sasl_auth_enable/a smtp_sasl_password_maps = hash:/etc/postfix/smtp_auth" /etc/postfix/main.cf
+else
+	${SUDO} sed -i "s/smtp_sasl_password_maps.*/smtp_sasl_password_maps = hash:/etc/postfix/smtp_auth/g" /etc/postfix/main.cf
+fi
+
+if [[ "$postfix_main_cf" != *smtp_sasl_security_options* ]]; then
+	${SUDO} sed -i "/smtp_sasl_password_maps/a smtp_sasl_security_options = noanonymous" /etc/postfix/main.cf
+else
+	${SUDO} sed -i "s/smtp_sasl_security_options.*/smtp_sasl_security_options = noanonymous/g" /etc/postfix/main.cf
+fi
+
+if [[ "$postfix_main_cf" != *smtp_tls_security_level* ]]; then
+	${SUDO} sed -i "/smtp_sasl_security_options/a smtp_tls_security_level = encrypt" /etc/postfix/main.cf
+else
+	${SUDO} sed -i "s/smtp_tls_security_level.*/smtp_tls_security_level = encrypt/g" /etc/postfix/main.cf
+fi
+
 ${SUDO} sed -i "s/mydestination =.*/mydestination = localhost/g" /etc/postfix/main.cf
 ${SUDO} sed -i "s/inet_interfaces =.*/inet_interfaces = loopback-only/g" /etc/postfix/main.cf
 ${SUDO} sed -i "s/myhostname =.*/myhostname = $HOST_FQDN/g" /etc/postfix/main.cf
 ${SUDO} sed -i "s/relayhost =.*/relayhost = [$SMTP_RELAY_HOST]:$SMTP_RELAY_PORT/g" /etc/postfix/main.cf
-
-# store contents of main.cf in variable for checks
-postfix_main_cf=$(cat /etc/postfix/main.cf)
 
 # check if default_transport is present
 if [[ "$postfix_main_cf" != *default_transport* ]]; then
