@@ -31,3 +31,5 @@ ${SUDO} chmod +x /usr/local/bin/docker-compose
 echo "testing if everything worked"
 docker run hello-world
 docker-compose --version
+
+echo "if you have iptables-persistent installed now updated the saved firewall rules, to include docker specifiy chains"
