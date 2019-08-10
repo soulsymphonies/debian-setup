@@ -26,11 +26,11 @@ fi
 ${SUDO} apt-get -qq -y install apt-transport-https curl lsb-release ca-certificates software-properties-common dirmngr
 
 echo "adding repositories"
-# add stretch-backports
-${SUDO} sh -c 'echo "deb http://ftp.de.debian.org/debian/ stretch-backports main contrib non-free" > /etc/apt/sources.list.d/backports.list'
+# add buster-backports
+${SUDO} sh -c 'echo "deb http://ftp.de.debian.org/debian/ buster-backports main contrib non-free" > /etc/apt/sources.list.d/backports.list'
 
 # add debian sury php repository
-${SUDO} curl -ssL -o /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+${SUDO} wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
 ${SUDO} sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
 
 # add postgresql repository
@@ -39,12 +39,12 @@ ${SUDO} sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release 
 
 # add mariadb 10.2 repository
 ${SUDO} apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xF1656F24C74CD1D8
-${SUDO} sh -c 'echo "deb [arch=amd64,i386,ppc64el] http://mirror2.hs-esslingen.de/mariadb/repo/10.2/debian $(lsb_release -sc) main" > /etc/apt/sources.list.d/mariadb.list'
-${SUDO} sh -c 'echo "deb-src http://mirror2.hs-esslingen.de/mariadb/repo/10.2/debian $(lsb_release -sc) main" >> /etc/apt/sources.list.d/mariadb.list'
+${SUDO} sh -c 'echo "deb [arch=amd64] http://mirror2.hs-esslingen.de/mariadb/repo/10.4/debian $(lsb_release -sc) main" > /etc/apt/sources.list.d/mariadb.list'
+${SUDO} sh -c 'echo "deb-src http://mirror2.hs-esslingen.de/mariadb/repo/10.4/debian $(lsb_release -sc) main" >> /etc/apt/sources.list.d/mariadb.list'
 
 ${SUDO} cat << EOF > /etc/apt/preferences.d/backports.pref
 Package: *
-Pin: release a=stretch-backports
+Pin: release a=buster-backports
 Pin-Priority: 450
 EOF
 
