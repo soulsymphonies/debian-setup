@@ -21,14 +21,14 @@
 //   ${distro_id}            Installed origin.
 //   ${distro_codename}      Installed codename (eg, "jessie")
 Unattended-Upgrade::Origins-Pattern {
-        "o=Debian,n=stretch,l=Debian-Security";
-        "o=Debian,n=stretch-updates,l=Debian";
-        "o=Debian,n=stretch,l=Debian";
-		"o=Debian Backports,n=stretch-backports";
-		"o=nginx,n=stretch,l=nginx";
-		"o=apt.postgresql.org,n=stretch-pgdg";
-		"o=MariaDB,n=stretch,l=MariaDB";
-		"o=deb.sury.org,n=stretch";
+        "o=Debian,n=buster,l=Debian-Security";
+        "o=Debian,n=buster-updates,l=Debian";
+        "o=Debian,n=buster,l=Debian";
+		"o=Debian Backports,n=buster-backports";
+		"o=nginx,n=buster,l=nginx";
+		"o=apt.postgresql.org,n=buster-pgdg";
+		"o=MariaDB,n=buster,l=MariaDB";
+		"o=deb.sury.org,n=buster";
 };
 
 // List of packages to not update (regexp are supported)
