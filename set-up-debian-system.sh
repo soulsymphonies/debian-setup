@@ -303,7 +303,7 @@ fi
 
 if [[ "$cronjobs" != *psad-sig-update.sh* ]]; then
 	(${SUDO} crontab -u root -l; ${SUDO} echo "# update psad signatures") | ${SUDO} crontab -u root -
-	(${SUDO} crontab -u root -l; ${SUDO} echo "0 5 * * * /usr/local/bin/psad-sig-update.sh > /dev/null 2&>1") | ${SUDO} crontab -u root -
+	(${SUDO} crontab -u root -l; ${SUDO} echo "0 5 * * * /usr/local/bin/psad-sig-update.sh > /dev/null 2>&1") | ${SUDO} crontab -u root -
 fi
 
 #####################################################
