@@ -63,6 +63,11 @@ EOF
 ${SUDO} apt-get -qq update
 
 ###########################################
+# install linux tools for network and DNS #
+###########################################
+${SUDO} apt-get -qq -y install dnsutils net-tools nethogs
+
+###########################################
 # install postfix for local mail delivery #
 ###########################################
 echo "installing postfix as local MDA"
