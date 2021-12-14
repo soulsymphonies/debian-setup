@@ -26,9 +26,6 @@ fi
 ${SUDO} apt-get -qq -y install apt-transport-https curl lsb-release ca-certificates software-properties-common dirmngr
 
 echo "adding repositories"
-# add buster-backports
-${SUDO} sh -c 'echo "deb http://ftp.de.debian.org/debian/ buster-backports main contrib non-free" > /etc/apt/sources.list.d/backports.list'
-
 # add debian sury php repository
 ${SUDO} wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
 ${SUDO} sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
@@ -39,12 +36,6 @@ ${SUDO} sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main"
 
 # add mariadb repository
 ${SUDO} curl -LsS https://r.mariadb.com/downloads/mariadb_repo_setup | ${SUDO} bash
-
-${SUDO} cat << EOF > /etc/apt/preferences.d/backports.pref
-Package: *
-Pin: release a=buster-backports
-Pin-Priority: 450
-EOF
 
 ${SUDO} cat << EOF > /etc/apt/preferences.d/pgdg.pref
 Package: *
@@ -306,7 +297,7 @@ fi
 
 if [[ "$cronjobs" != *psad-sig-update.sh* ]]; then
 	(${SUDO} crontab -u root -l; ${SUDO} echo "# update psad signatures") | ${SUDO} crontab -u root -
-	(${SUDO} crontab -u root -l; ${SUDO} echo "0 5 * * * /usr/local/bin/psad-sig-update.sh > /dev/null 2&>1") | ${SUDO} crontab -u root -
+	(${SUDO} crontab -u root -l; ${SUDO} echo "0 5 * * * /usr/local/bin/psad-sig-update.sh > /dev/null 2>&1") | ${SUDO} crontab -u root -
 fi
 
 #####################################################
