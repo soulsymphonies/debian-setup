@@ -25,7 +25,7 @@ echo "installing docker"
 ${SUDO} apt-get -qq -y install docker-ce docker-ce-cli containerd.io > /dev/null
 
 echo "installing docker-compose"
-${SUDO} curl -L "https://github.com/docker/compose/releases/download/1.29.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+${SUDO} curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 ${SUDO} chmod +x /usr/local/bin/docker-compose
 
 echo "testing if everything worked"
