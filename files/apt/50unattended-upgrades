@@ -21,13 +21,29 @@
 //   ${distro_id}            Installed origin.
 //   ${distro_codename}      Installed codename (eg, "jessie")
 Unattended-Upgrade::Origins-Pattern {
-        "o=Debian,n=bullseye,l=Debian-Security";
-        "o=Debian,n=bullseye-updates,l=Debian";
-        "o=Debian,n=bullsyey,l=Debian";
-		"o=nginx,n=bullseye,l=nginx";
-		"o=apt.postgresql.org,n=bullseye-pgdg";
-		"o=MariaDB,n=bullseye,l=MariaDB";
-		"o=deb.sury.org,n=bullseye";
+        // Codename based matching:
+        // This will follow the migration of a release through different
+        // archives (e.g. from testing to stable and later oldstable).
+        // Software will be the latest available for the named release,
+        // but the Debian release itself will not be automatically upgraded.
+        "origin=Debian,codename=${distro_codename}-updates";
+//      "origin=Debian,codename=${distro_codename}-proposed-updates";
+        "origin=Debian,codename=${distro_codename},label=Debian";
+        "origin=Debian,codename=${distro_codename},label=Debian-Security";
+        "origin=Debian,codename=${distro_codename}-security,label=Debian-Security";
+
+        // Archive or Suite based matching:
+        // Note that this will silently match a different release after
+        // migration to the specified archive (e.g. testing becomes the
+        // new stable).
+//      "o=Debian,a=stable";
+//      "o=Debian,a=stable-updates";
+//      "o=Debian,a=proposed-updates";
+//      "o=Debian Backports,a=${distro_codename}-backports,l=Debian Backports";
+	"o=nginx,n=bullseye,l=nginx";
+	"o=apt.postgresql.org,n=bullseye-pgdg";
+	"o=MariaDB,n=bullseye,l=MariaDB";
+	"o=deb.sury.org,n=bullseye";
 };
 
 // List of packages to not update (regexp are supported)
