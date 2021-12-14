@@ -303,7 +303,7 @@ fi
 #####################################################
 # install and configure automatic software updates  #
 #####################################################
-${SUDO} apt-get -qq install -y unattended-upgrades apt-listchanges
+${SUDO} apt-get -qq install -y unattended-upgrades apt-listchanges apt-config-auto-update
 
 # backup and copy new config file
 ${SUDO} mv /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/apt.conf.d/50unattended-upgrades_backup
