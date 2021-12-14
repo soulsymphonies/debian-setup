@@ -37,10 +37,8 @@ ${SUDO} sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main"
 # ${SUDO} wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | ${SUDO} apt-key add -
 # ${SUDO} sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -sc)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 
-# add mariadb 10.2 repository
-${SUDO} apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xF1656F24C74CD1D8
-${SUDO} sh -c 'echo "deb [arch=amd64] http://mirror2.hs-esslingen.de/mariadb/repo/10.4/debian $(lsb_release -sc) main" > /etc/apt/sources.list.d/mariadb.list'
-${SUDO} sh -c 'echo "deb-src http://mirror2.hs-esslingen.de/mariadb/repo/10.4/debian $(lsb_release -sc) main" >> /etc/apt/sources.list.d/mariadb.list'
+# add mariadb repository
+${SUDO} curl -LsS https://r.mariadb.com/downloads/mariadb_repo_setup | ${SUDO} bash
 
 ${SUDO} cat << EOF > /etc/apt/preferences.d/backports.pref
 Package: *
