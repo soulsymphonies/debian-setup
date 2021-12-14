@@ -30,18 +30,8 @@ echo "adding repositories"
 ${SUDO} wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
 ${SUDO} sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list'
 
-# add postgresql repository
-# ${SUDO} wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | ${SUDO} apt-key add -
-# ${SUDO} sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -sc)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-
 # add mariadb repository
 ${SUDO} curl -LsS https://r.mariadb.com/downloads/mariadb_repo_setup | ${SUDO} bash
-
-${SUDO} cat << EOF > /etc/apt/preferences.d/pgdg.pref
-Package: *
-Pin: origin apt.postgresql.org
-Pin-Priority: 900
-EOF
 
 ${SUDO} cat << EOF > /etc/apt/preferences.d/mariadb.pref
 Package: *
